@@ -1,0 +1,12 @@
+[package]
+name = "nodle-plugin-template"
+version = "0.1.0"
+edition = "2021"
+description = "Template for creating plugins for Nodle node editor"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+nodle-plugin-sdk = { git = "https://github.com/bsundman/nodle-plugin-sdk" }
+egui = "0.24"
