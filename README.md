@@ -1,6 +1,28 @@
-# Nodle Plugin Template
+# Nodle USD Plugin
 
-This is a template for creating plugins for the Nodle node editor. It demonstrates how to create custom nodes that can be dynamically loaded at runtime.
+Universal Scene Description (USD) plugin for the Nodle node editor. This plugin provides USD-specific nodes for creating materials, shaders, and textures in 3D workflows.
+
+## Features
+
+This plugin includes three essential USD shading nodes:
+
+### USD Material Node
+- **Category**: 3D > USD > Shading > Materials
+- **Description**: Creates a USD material for surface shading
+- **Inputs**: Stage, Parent Path, Name, Surface Shader
+- **Outputs**: Material Path, Material Reference, Surface Output
+
+### USD Preview Surface Node
+- **Category**: 3D > USD > Shading > Shaders
+- **Description**: Standard USD preview surface shader with PBR properties
+- **Parameters**: Diffuse Color, Metallic, Roughness
+- **Outputs**: Surface shader for material connection
+
+### USD Texture Node
+- **Category**: 3D > USD > Shading > Textures
+- **Description**: USD texture reader for image-based texturing
+- **Inputs**: File Path, UV coordinates
+- **Outputs**: RGB color, Alpha channel
 
 ## Building the Plugin
 
@@ -9,115 +31,51 @@ cargo build --release
 ```
 
 The plugin will be built as a dynamic library:
-- **Linux**: `target/release/libnodle_plugin_template.so`
-- **macOS**: `target/release/libnodle_plugin_template.dylib`
-- **Windows**: `target/release/nodle_plugin_template.dll`
+- **Linux**: `target/release/libnodle_usd_plugin.so`
+- **macOS**: `target/release/libnodle_usd_plugin.dylib`
+- **Windows**: `target/release/nodle_usd_plugin.dll`
 
 ## Installing the Plugin
 
-Copy the built library to one of these directories:
-- `~/.nodle/plugins/` (user plugins)
-- `./plugins/` (local plugins)
-
-## Example Nodes
-
-This template includes two example nodes:
-
-### HelloWorld Node
-- **Category**: Utility
-- **Description**: Simple greeting node with editable message
-- **Outputs**: Message (String)
-
-### Math Add Node
-- **Category**: Math
-- **Description**: Adds two numbers together
-- **Inputs**: A (Float), B (Float)
-- **Outputs**: Result (Float)
-
-## Plugin Structure
-
-### 1. Plugin Implementation
-
-Every plugin must implement the `NodePlugin` trait:
-
-```rust
-impl NodePlugin for ExamplePlugin {
-    fn plugin_info(&self) -> PluginInfo { ... }
-    fn register_nodes(&self, registry: &mut dyn NodeRegistryTrait) { ... }
-    fn on_load(&self) -> Result<(), PluginError> { ... }
-    fn on_unload(&self) -> Result<(), PluginError> { ... }
-}
-```
-
-### 2. Node Factory
-
-Each node type needs a factory that implements `NodeFactory`:
-
-```rust
-impl NodeFactory for HelloWorldNodeFactory {
-    fn metadata(&self) -> NodeMetadata { ... }
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> { ... }
-}
-```
-
-### 3. Node Implementation
-
-The actual node logic implements `PluginNode`:
-
-```rust
-impl PluginNode for HelloWorldNode {
-    fn id(&self) -> String { ... }
-    fn position(&self) -> Pos2 { ... }
-    fn set_position(&mut self, position: Pos2) { ... }
-    fn render_parameters(&mut self, ui: &mut Ui) -> Vec<ParameterChange> { ... }
-    fn get_parameter(&self, name: &str) -> Option<NodeData> { ... }
-    fn set_parameter(&mut self, name: &str, value: NodeData) { ... }
-    fn process(&mut self, inputs: &HashMap<String, NodeData>) -> HashMap<String, NodeData> { ... }
-}
-```
-
-### 4. Export Functions
-
-The plugin must export these C functions:
-
-```rust
-#[no_mangle]
-pub extern "C" fn create_plugin() -> *mut dyn NodePlugin {
-    Box::into_raw(Box::new(ExamplePlugin))
-}
-
-#[no_mangle]
-pub extern "C" fn destroy_plugin(plugin: *mut dyn NodePlugin) {
-    unsafe { let _ = Box::from_raw(plugin); }
-}
-```
-
-## Development Tips
-
-1. **Use the SDK**: Always depend on `nodle-plugin-sdk` for interfaces
-2. **Node Metadata**: Provide rich metadata for better integration
-3. **Workspace Compatibility**: Specify which workspaces support your nodes
-4. **Error Handling**: Use `PluginError` for consistent error reporting
-5. **Resource Management**: Clean up properly in `on_unload()`
-
-## Customization
-
-To create your own plugin:
-
-1. Copy this template
-2. Update `Cargo.toml` with your plugin name
-3. Implement your `NodePlugin` struct
-4. Create your node factories and implementations
-5. Update the `register_nodes()` method to register your nodes
-
-## Testing
-
-Build and copy the plugin to test it:
-
+Copy the built library to Nodle's plugins directory:
 ```bash
-cargo build --release
-mkdir -p ~/.nodle/plugins
-cp target/release/libnodle_plugin_template.dylib ~/.nodle/plugins/
+# macOS/Linux
+cp target/release/libnodle_usd_plugin.dylib ~/.nodle/plugins/
+
+# Or to local plugins folder
+cp target/release/libnodle_usd_plugin.dylib ./plugins/
 ```
 
-Then run Nodle - your nodes should appear in the appropriate workspace menus!
+## Usage
+
+Once installed, the USD nodes will appear in the node menu under:
+- **3D > USD > Shading > Materials** - USD Material
+- **3D > USD > Shading > Shaders** - USD Preview Surface
+- **3D > USD > Shading > Textures** - USD Texture
+
+These nodes work together to create USD-compliant shading networks:
+1. Create a USD Material node
+2. Connect a USD Preview Surface to the material's Surface Shader input
+3. Connect USD Texture nodes to the preview surface for texturing
+
+## Development
+
+This plugin demonstrates:
+- Clean separation of USD functionality from core
+- Proper plugin architecture using nodle-plugin-sdk
+- Type-safe node implementation
+- Integration with egui for parameter UI
+
+## Future Enhancements
+
+This is a minimal USD plugin. Future versions could include:
+- Full USD stage management nodes
+- Geometry creation nodes (Sphere, Cube, Mesh, etc.)
+- Lighting nodes (Distant, Rect, Sphere lights)
+- Transform and animation nodes
+- USD composition nodes
+- Python-based USD engine integration
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
