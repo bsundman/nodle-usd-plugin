@@ -11,6 +11,9 @@ mod core;
 // Include viewport module with complete 3D rendering
 mod viewport;
 
+// Include proper load stage node
+mod load_stage_node;
+
 // USD Plugin
 pub struct USDPlugin;
 
@@ -71,235 +74,6 @@ impl NodePlugin for USDPlugin {
         println!("🎉 All USD nodes registered successfully!");
     }
     
-    fn get_menu_structure(&self) -> Vec<MenuStructure> {
-        vec![
-            MenuStructure::Category {
-                name: "USD".to_string(),
-                items: vec![
-                    MenuStructure::Category {
-                        name: "Stage".to_string(),
-                        items: vec![
-                            MenuStructure::Node {
-                                name: "Create Stage".to_string(),
-                                node_type: "USD_CreateStage".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_CreateStage",
-                                    "Create Stage",
-                                    NodeCategory::new(&["USD", "Stage"]),
-                                    "Create a new USD stage"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Load Stage".to_string(),
-                                node_type: "USD_LoadStage".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_LoadStage",
-                                    "Load Stage",
-                                    NodeCategory::new(&["USD", "Stage"]),
-                                    "Load a USD stage from file"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Save Stage".to_string(),
-                                node_type: "USD_SaveStage".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_SaveStage",
-                                    "Save Stage",
-                                    NodeCategory::new(&["USD", "Stage"]),
-                                    "Save USD stage to file"
-                                ),
-                            },
-                        ],
-                    },
-                    MenuStructure::Category {
-                        name: "Geometry".to_string(),
-                        items: vec![
-                            MenuStructure::Node {
-                                name: "Mesh".to_string(),
-                                node_type: "USD_Mesh".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Mesh",
-                                    "Mesh",
-                                    NodeCategory::new(&["USD", "Geometry"]),
-                                    "Create USD mesh geometry"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Sphere".to_string(),
-                                node_type: "USD_Sphere".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Sphere",
-                                    "Sphere",
-                                    NodeCategory::new(&["USD", "Geometry"]),
-                                    "Create USD sphere primitive"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Cube".to_string(),
-                                node_type: "USD_Cube".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Cube",
-                                    "Cube",
-                                    NodeCategory::new(&["USD", "Geometry"]),
-                                    "Create USD cube primitive"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Cylinder".to_string(),
-                                node_type: "USD_Cylinder".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Cylinder",
-                                    "Cylinder",
-                                    NodeCategory::new(&["USD", "Geometry"]),
-                                    "Create USD cylinder primitive"
-                                ),
-                            },
-                        ],
-                    },
-                    MenuStructure::Category {
-                        name: "Transform".to_string(),
-                        items: vec![
-                            MenuStructure::Node {
-                                name: "Xform".to_string(),
-                                node_type: "USD_Xform".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Xform",
-                                    "Xform",
-                                    NodeCategory::new(&["USD", "Transform"]),
-                                    "Apply transformation to USD prim"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Translate".to_string(),
-                                node_type: "USD_Translate".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Translate",
-                                    "Translate",
-                                    NodeCategory::new(&["USD", "Transform"]),
-                                    "Translate USD prim"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Rotate".to_string(),
-                                node_type: "USD_Rotate".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Rotate",
-                                    "Rotate",
-                                    NodeCategory::new(&["USD", "Transform"]),
-                                    "Rotate USD prim"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Scale".to_string(),
-                                node_type: "USD_Scale".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Scale",
-                                    "Scale",
-                                    NodeCategory::new(&["USD", "Transform"]),
-                                    "Scale USD prim"
-                                ),
-                            },
-                        ],
-                    },
-                    MenuStructure::Category {
-                        name: "Lighting".to_string(),
-                        items: vec![
-                            MenuStructure::Node {
-                                name: "Distant Light".to_string(),
-                                node_type: "USD_DistantLight".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_DistantLight",
-                                    "Distant Light",
-                                    NodeCategory::new(&["USD", "Lighting"]),
-                                    "Create distant (directional) light"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Sphere Light".to_string(),
-                                node_type: "USD_SphereLight".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_SphereLight",
-                                    "Sphere Light",
-                                    NodeCategory::new(&["USD", "Lighting"]),
-                                    "Create sphere area light"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Dome Light".to_string(),
-                                node_type: "USD_DomeLight".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_DomeLight",
-                                    "Dome Light",
-                                    NodeCategory::new(&["USD", "Lighting"]),
-                                    "Create dome/environment light"
-                                ),
-                            },
-                        ],
-                    },
-                    MenuStructure::Category {
-                        name: "Shading".to_string(),
-                        items: vec![
-                            MenuStructure::Node {
-                                name: "Material".to_string(),
-                                node_type: "USD_Material".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Material",
-                                    "Material",
-                                    NodeCategory::new(&["USD", "Shading"]),
-                                    "Create USD material"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Shader".to_string(),
-                                node_type: "USD_Shader".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Shader",
-                                    "Shader",
-                                    NodeCategory::new(&["USD", "Shading"]),
-                                    "Create USD shader"
-                                ),
-                            },
-                            MenuStructure::Node {
-                                name: "Texture".to_string(),
-                                node_type: "USD_Texture".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Texture",
-                                    "Texture",
-                                    NodeCategory::new(&["USD", "Shading"]),
-                                    "Create USD texture"
-                                ),
-                            },
-                        ],
-                    },
-                    MenuStructure::Category {
-                        name: "Viewport".to_string(),
-                        items: vec![
-                            MenuStructure::Node {
-                                name: "USD Viewport".to_string(),
-                                node_type: "USD_Viewport".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_Viewport",
-                                    "USD Viewport",
-                                    NodeCategory::new(&["USD", "Viewport"]),
-                                    "3D viewport for visualizing and rendering USD stages with real-time navigation"
-                                ).with_panel_type(PanelType::Viewport),
-                            },
-                            MenuStructure::Node {
-                                name: "Stage Inspector".to_string(),
-                                node_type: "USD_StageInspector".to_string(),
-                                metadata: NodeMetadata::new(
-                                    "USD_StageInspector",
-                                    "Stage Inspector",
-                                    NodeCategory::new(&["USD", "Viewport"]),
-                                    "Inspect USD stage hierarchy"
-                                ),
-                            },
-                        ],
-                    },
-                ],
-            },
-        ]
-    }
     
     fn on_load(&self) -> Result<(), PluginError> {
         println!("USD Plugin loaded - comprehensive USD support available");
@@ -335,8 +109,8 @@ impl NodeFactory for USDCreateStageFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_CreateStage", "Create Stage", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_CreateStage", "Create Stage", position)))
     }
 }
 
@@ -345,6 +119,7 @@ pub struct USDLoadStageFactory;
 
 impl NodeFactory for USDLoadStageFactory {
     fn metadata(&self) -> NodeMetadata {
+        println!("Creating USD Load Stage metadata with output port");
         NodeMetadata::new(
             "USD_LoadStage",
             "Load Stage",
@@ -354,18 +129,19 @@ impl NodeFactory for USDLoadStageFactory {
         .with_color(Color32::from_rgb(80, 150, 200))
         .with_icon("📂")
         .with_inputs(vec![
-            PortDefinition::optional("File Path", DataType::String)
-                .with_description("Path to USD file"),
+            // No input ports - file selection via parameters
         ])
         .with_outputs(vec![
             PortDefinition::required("Stage", DataType::String)
                 .with_description("Loaded USD stage"),
         ])
+        .with_panel_type(PanelType::Parameter)
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_LoadStage", "Load Stage", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        println!("Creating USD Load Stage node at position: {:?}", position);
+        PluginNodeHandle::new(Box::new(crate::load_stage_node::USDLoadStageNode::new(position)))
     }
 }
 
@@ -395,8 +171,8 @@ impl NodeFactory for USDSaveStageFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_SaveStage", "Save Stage", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_SaveStage", "Save Stage", position)))
     }
 }
 
@@ -425,8 +201,8 @@ impl NodeFactory for USDMeshFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Mesh", "Mesh", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Mesh", "Mesh", position)))
     }
 }
 
@@ -454,8 +230,8 @@ impl NodeFactory for USDSphereFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Sphere", "Sphere", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Sphere", "Sphere", position)))
     }
 }
 
@@ -483,8 +259,8 @@ impl NodeFactory for USDCubeFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Cube", "Cube", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Cube", "Cube", position)))
     }
 }
 
@@ -512,8 +288,8 @@ impl NodeFactory for USDCylinderFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Cylinder", "Cylinder", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Cylinder", "Cylinder", position)))
     }
 }
 
@@ -542,8 +318,8 @@ impl NodeFactory for USDXformFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Xform", "Xform", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Xform", "Xform", position)))
     }
 }
 
@@ -571,8 +347,8 @@ impl NodeFactory for USDTranslateFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Translate", "Translate", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Translate", "Translate", position)))
     }
 }
 
@@ -600,8 +376,8 @@ impl NodeFactory for USDRotateFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Rotate", "Rotate", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Rotate", "Rotate", position)))
     }
 }
 
@@ -629,8 +405,8 @@ impl NodeFactory for USDScaleFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Scale", "Scale", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Scale", "Scale", position)))
     }
 }
 
@@ -659,8 +435,8 @@ impl NodeFactory for USDDistantLightFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_DistantLight", "Distant Light", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_DistantLight", "Distant Light", position)))
     }
 }
 
@@ -688,8 +464,8 @@ impl NodeFactory for USDSphereLightFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_SphereLight", "Sphere Light", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_SphereLight", "Sphere Light", position)))
     }
 }
 
@@ -717,8 +493,8 @@ impl NodeFactory for USDDomeLightFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_DomeLight", "Dome Light", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_DomeLight", "Dome Light", position)))
     }
 }
 
@@ -747,8 +523,8 @@ impl NodeFactory for USDMaterialFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Material", "Material", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Material", "Material", position)))
     }
 }
 
@@ -776,8 +552,8 @@ impl NodeFactory for USDShaderFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Shader", "Shader", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Shader", "Shader", position)))
     }
 }
 
@@ -805,8 +581,8 @@ impl NodeFactory for USDTextureFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_Texture", "Texture", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_Texture", "Texture", position)))
     }
 }
 
@@ -835,8 +611,8 @@ impl NodeFactory for USDStageInspectorFactory {
         .with_workspace_compatibility(vec!["3D"])
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(SimpleUSDNode::new("USD_StageInspector", "Stage Inspector", position))
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(SimpleUSDNode::new("USD_StageInspector", "Stage Inspector", position)))
     }
 }
 
@@ -861,16 +637,22 @@ impl SimpleUSDNode {
 }
 
 impl PluginNode for SimpleUSDNode {
-    fn id(&self) -> String { self.id.clone() }
+    fn id(&self) -> String { self.id.clone().into() }
     fn position(&self) -> Pos2 { self.position }
     fn set_position(&mut self, position: Pos2) { self.position = position; }
     
-    fn render_parameters(&mut self, ui: &mut Ui) -> Vec<ParameterChange> {
-        ui.label(format!("🎭 {}", self.display_name));
-        ui.separator();
-        ui.label(format!("Node Type: {}", self.node_type));
-        ui.label("Parameters will be implemented soon...");
-        Vec::new()
+    fn get_parameter_ui(&self) -> ParameterUI {
+        let mut elements = Vec::<UIElement>::new();
+        elements.push(UIElement::Label(format!("🎭 {}", self.display_name).into()));
+        elements.push(UIElement::Separator);
+        elements.push(UIElement::Label(format!("Node Type: {}", self.node_type).into()));
+        elements.push(UIElement::Label("Parameters will be implemented soon...".into()));
+        
+        ParameterUI { elements }
+    }
+    
+    fn handle_ui_action(&mut self, _action: UIAction) -> Vec<ParameterChange> {
+        Vec::<ParameterChange>::new()
     }
     
     fn get_parameter(&self, _name: &str) -> Option<NodeData> {
@@ -886,13 +668,14 @@ impl PluginNode for SimpleUSDNode {
     }
 }
 
-// Export C functions
+// Export C functions using safe wrapper
 #[no_mangle]
-pub extern "C" fn create_plugin() -> *mut dyn NodePlugin {
-    Box::into_raw(Box::new(USDPlugin))
+pub extern "C" fn create_plugin() -> PluginHandle {
+    PluginHandle::new(Box::new(USDPlugin))
 }
 
 #[no_mangle]
-pub extern "C" fn destroy_plugin(plugin: *mut dyn NodePlugin) {
-    unsafe { let _ = Box::from_raw(plugin); }
+pub extern "C" fn destroy_plugin(handle: PluginHandle) {
+    // Plugin will be dropped when handle goes out of scope
+    let _ = unsafe { handle.into_plugin() };
 }

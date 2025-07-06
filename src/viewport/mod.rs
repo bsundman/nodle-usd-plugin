@@ -250,12 +250,12 @@ impl NodeFactory for USDViewport {
         .with_panel_type(PanelType::Viewport)
     }
     
-    fn create_node(&self, position: Pos2) -> Box<dyn PluginNode> {
-        Box::new(USDViewportNode {
+    fn create_node(&self, position: Pos2) -> PluginNodeHandle {
+        PluginNodeHandle::new(Box::new(USDViewportNode {
             id: uuid::Uuid::new_v4().to_string(),
             position,
             viewport_data: USDViewport::default(),
-        })
+        }))
     }
 }
 
@@ -277,7 +277,7 @@ impl std::fmt::Debug for USDViewportNode {
 
 impl PluginNode for USDViewportNode {
     fn id(&self) -> String {
-        self.id.clone()
+        self.id.clone().into()
     }
     
     fn position(&self) -> Pos2 {
@@ -288,101 +288,184 @@ impl PluginNode for USDViewportNode {
         self.position = position;
     }
     
-    fn render_parameters(&mut self, ui: &mut Ui) -> Vec<ParameterChange> {
-        let mut changes = Vec::new();
+    fn get_parameter_ui(&self) -> ParameterUI {
+        let mut elements = Vec::<UIElement>::new();
         
         // USD Viewport Parameters - no direct egui rendering of 3D content
-        ui.heading("USD Viewport Settings");
-        ui.separator();
+        elements.push(UIElement::Heading("USD Viewport Settings".into()));
+        elements.push(UIElement::Separator);
         
         // Stage Information
-        ui.label("📁 Stage Information");
+        elements.push(UIElement::Label("📁 Stage Information".into()));
         if self.viewport_data.current_stage.is_empty() {
-            ui.label("No USD stage loaded");
+            elements.push(UIElement::Label("No USD stage loaded".into()));
         } else {
-            ui.label(format!("Current Stage: {}", self.viewport_data.current_stage));
+            elements.push(UIElement::Label(format!("Current Stage: {}", self.viewport_data.current_stage).into()));
         }
-        ui.separator();
+        elements.push(UIElement::Separator);
         
         // Camera Settings
-        ui.label("🎥 Camera Settings");
-        ui.horizontal(|ui| {
-            ui.label("Orbit Sensitivity:");
-            if ui.add(egui::Slider::new(&mut self.viewport_data.camera_settings.orbit_sensitivity, 0.1..=2.0)).changed() {
-                changes.push(ParameterChange {
-                    parameter: "orbit_sensitivity".to_string(),
-                    value: NodeData::Float(self.viewport_data.camera_settings.orbit_sensitivity),
-                });
-            }
-        });
-        ui.horizontal(|ui| {
-            ui.label("Pan Sensitivity:");
-            if ui.add(egui::Slider::new(&mut self.viewport_data.camera_settings.pan_sensitivity, 0.1..=2.0)).changed() {
-                changes.push(ParameterChange {
-                    parameter: "pan_sensitivity".to_string(),
-                    value: NodeData::Float(self.viewport_data.camera_settings.pan_sensitivity),
-                });
-            }
-        });
-        ui.horizontal(|ui| {
-            ui.label("Zoom Sensitivity:");
-            if ui.add(egui::Slider::new(&mut self.viewport_data.camera_settings.zoom_sensitivity, 0.1..=2.0)).changed() {
-                changes.push(ParameterChange {
-                    parameter: "zoom_sensitivity".to_string(),
-                    value: NodeData::Float(self.viewport_data.camera_settings.zoom_sensitivity),
-                });
-            }
+        elements.push(UIElement::Label("🎥 Camera Settings".into()));
+        elements.push(UIElement::Slider {
+            label: "Orbit Sensitivity".into(),
+            value: self.viewport_data.camera_settings.orbit_sensitivity,
+            min: 0.1,
+            max: 2.0,
+            parameter_name: "orbit_sensitivity".into(),
         });
         
-        if ui.button("Reset Camera").clicked() {
-            self.viewport_data.handle_camera_manipulation(CameraManipulation::Reset);
-            changes.push(ParameterChange {
-                parameter: "camera_reset".to_string(),
-                value: NodeData::Boolean(true),
-            });
-        }
-        ui.separator();
+        elements.push(UIElement::Slider {
+            label: "Pan Sensitivity".into(),
+            value: self.viewport_data.camera_settings.pan_sensitivity,
+            min: 0.1,
+            max: 2.0,
+            parameter_name: "pan_sensitivity".into(),
+        });
+        
+        elements.push(UIElement::Slider {
+            label: "Zoom Sensitivity".into(),
+            value: self.viewport_data.camera_settings.zoom_sensitivity,
+            min: 0.1,
+            max: 2.0,
+            parameter_name: "zoom_sensitivity".into(),
+        });
+        
+        elements.push(UIElement::Button {
+            label: "Reset Camera".into(),
+            action: "reset_camera".into(),
+        });
+        
+        elements.push(UIElement::Separator);
         
         // Viewport Settings
-        ui.label("⚙️ Viewport Settings");
-        if ui.checkbox(&mut self.viewport_data.viewport_data.settings.wireframe, "Wireframe").changed() {
-            self.viewport_data.viewport_data.settings_dirty = true;
-            changes.push(ParameterChange {
-                parameter: "wireframe".to_string(),
-                value: NodeData::Boolean(self.viewport_data.viewport_data.settings.wireframe),
-            });
-        }
-        if ui.checkbox(&mut self.viewport_data.viewport_data.settings.lighting, "Lighting").changed() {
-            self.viewport_data.viewport_data.settings_dirty = true;
-            changes.push(ParameterChange {
-                parameter: "lighting".to_string(),
-                value: NodeData::Boolean(self.viewport_data.viewport_data.settings.lighting),
-            });
-        }
-        if ui.checkbox(&mut self.viewport_data.viewport_data.settings.show_grid, "Show Grid").changed() {
-            self.viewport_data.viewport_data.settings_dirty = true;
-            changes.push(ParameterChange {
-                parameter: "show_grid".to_string(),
-                value: NodeData::Boolean(self.viewport_data.viewport_data.settings.show_grid),
-            });
-        }
-        if ui.checkbox(&mut self.viewport_data.viewport_data.settings.show_ground_plane, "Show Ground Plane").changed() {
-            self.viewport_data.viewport_data.settings_dirty = true;
-            changes.push(ParameterChange {
-                parameter: "show_ground_plane".to_string(),
-                value: NodeData::Boolean(self.viewport_data.viewport_data.settings.show_ground_plane),
-            });
-        }
+        elements.push(UIElement::Label("⚙️ Viewport Settings".into()));
         
-        ui.separator();
-        ui.label("💡 USD Plugin - Data-driven viewport rendering");
+        elements.push(UIElement::Checkbox {
+            label: "Wireframe".into(),
+            value: self.viewport_data.viewport_data.settings.wireframe,
+            parameter_name: "wireframe".into(),
+        });
+        
+        elements.push(UIElement::Checkbox {
+            label: "Lighting".into(),
+            value: self.viewport_data.viewport_data.settings.lighting,
+            parameter_name: "lighting".into(),
+        });
+        
+        elements.push(UIElement::Checkbox {
+            label: "Show Grid".into(),
+            value: self.viewport_data.viewport_data.settings.show_grid,
+            parameter_name: "show_grid".into(),
+        });
+        
+        elements.push(UIElement::Checkbox {
+            label: "Show Ground Plane".into(),
+            value: self.viewport_data.viewport_data.settings.show_ground_plane,
+            parameter_name: "show_ground_plane".into(),
+        });
+        
+        elements.push(UIElement::Separator);
+        elements.push(UIElement::Label("💡 USD Plugin - Data-driven viewport rendering".into()));
+        
+        ParameterUI { elements }
+    }
+    
+    fn handle_ui_action(&mut self, action: UIAction) -> Vec<ParameterChange> {
+        let mut changes = Vec::<ParameterChange>::new();
+        
+        match action {
+            UIAction::ParameterChanged { parameter, value } => {
+                match parameter.as_str() {
+                    "orbit_sensitivity" => {
+                        if let Some(val) = value.as_float() {
+                            self.viewport_data.camera_settings.orbit_sensitivity = val;
+                            changes.push(ParameterChange {
+                                parameter: "orbit_sensitivity".into(),
+                                value: NodeData::Float(val),
+                            });
+                        }
+                    }
+                    "pan_sensitivity" => {
+                        if let Some(val) = value.as_float() {
+                            self.viewport_data.camera_settings.pan_sensitivity = val;
+                            changes.push(ParameterChange {
+                                parameter: "pan_sensitivity".into(),
+                                value: NodeData::Float(val),
+                            });
+                        }
+                    }
+                    "zoom_sensitivity" => {
+                        if let Some(val) = value.as_float() {
+                            self.viewport_data.camera_settings.zoom_sensitivity = val;
+                            changes.push(ParameterChange {
+                                parameter: "zoom_sensitivity".into(),
+                                value: NodeData::Float(val),
+                            });
+                        }
+                    }
+                    "wireframe" => {
+                        if let Some(val) = value.as_boolean() {
+                            self.viewport_data.viewport_data.settings.wireframe = val;
+                            self.viewport_data.viewport_data.settings_dirty = true;
+                            changes.push(ParameterChange {
+                                parameter: "wireframe".into(),
+                                value: NodeData::Boolean(val),
+                            });
+                        }
+                    }
+                    "lighting" => {
+                        if let Some(val) = value.as_boolean() {
+                            self.viewport_data.viewport_data.settings.lighting = val;
+                            self.viewport_data.viewport_data.settings_dirty = true;
+                            changes.push(ParameterChange {
+                                parameter: "lighting".into(),
+                                value: NodeData::Boolean(val),
+                            });
+                        }
+                    }
+                    "show_grid" => {
+                        if let Some(val) = value.as_boolean() {
+                            self.viewport_data.viewport_data.settings.show_grid = val;
+                            self.viewport_data.viewport_data.settings_dirty = true;
+                            changes.push(ParameterChange {
+                                parameter: "show_grid".into(),
+                                value: NodeData::Boolean(val),
+                            });
+                        }
+                    }
+                    "show_ground_plane" => {
+                        if let Some(val) = value.as_boolean() {
+                            self.viewport_data.viewport_data.settings.show_ground_plane = val;
+                            self.viewport_data.viewport_data.settings_dirty = true;
+                            changes.push(ParameterChange {
+                                parameter: "show_ground_plane".into(),
+                                value: NodeData::Boolean(val),
+                            });
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            UIAction::ButtonClicked { action } => {
+                match action.as_str() {
+                    "reset_camera" => {
+                        self.viewport_data.handle_camera_manipulation(CameraManipulation::Reset);
+                        changes.push(ParameterChange {
+                            parameter: "camera_reset".into(),
+                            value: NodeData::Boolean(true),
+                        });
+                    }
+                    _ => {}
+                }
+            }
+        }
         
         changes
     }
     
     fn get_parameter(&self, name: &str) -> Option<NodeData> {
         match name {
-            "current_stage" => Some(NodeData::String(self.viewport_data.current_stage.clone())),
+            "current_stage" => Some(NodeData::String(self.viewport_data.current_stage.clone().into())),
             "orbit_sensitivity" => Some(NodeData::Float(self.viewport_data.camera_settings.orbit_sensitivity)),
             "pan_sensitivity" => Some(NodeData::Float(self.viewport_data.camera_settings.pan_sensitivity)),
             "zoom_sensitivity" => Some(NodeData::Float(self.viewport_data.camera_settings.zoom_sensitivity)),

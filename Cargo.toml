@@ -25,5 +25,5 @@ once_cell = "1.19"
 pyo3 = { version = "0.20", features = ["auto-initialize"], optional = true }
 
 [features]
-default = ["usd"]
+default = [] # Disable USD feature for now to avoid Python linking issues
 usd = ["pyo3"]
